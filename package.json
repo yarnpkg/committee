@@ -1,0 +1,10 @@
+{
+  "name": "committee",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "nearley": "^2.11.0"
+  }
+}
