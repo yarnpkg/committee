@@ -27,8 +27,8 @@ initialFix -> "Fixes #" [\d]:+ {% data => data[1].join('') %}
 subsequentFix -> ", fixes #" [\d]:+ {% data => data[1].join('') %}
 
 description -> chars {% data => data[0] %}
-              | chars newline:+ chars {% data => data.join('') %}
-              | chars newline:+ description {% data => data.join('') %}
+              | chars newline:+ chars {% data => data[0] + data[1].join('') + data[2] %}
+              | chars newline:+ description {% data => data[0] + data[1].join('') + data[2] %}
 
 chars -> [^\s] [^\n\r]:+ {% data => data[0] + data[1].join('') %}
 
