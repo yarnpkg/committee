@@ -1,7 +1,7 @@
 const nearley = require('nearley');
 const grammar = require('./lib/grammar');
 const {serialize} = require('./lib/serializer');
-const rank = require('./lib/rank');
+const {rank, quality} = require('./lib/rank');
 const engine = require('./lib/engine');
 
 if (require.main === module) {

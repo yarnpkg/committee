@@ -8,12 +8,19 @@ typeTag -> letters {% data => data[0] %}
 
 sectionTag -> letters {% data => data[0] %}
 
-body -> summary newline:+ testPlan {% data => ({type: 'body', summary: data[0], testPlan: data[2] }) %}
-        | [\s\S]:+ {% data => ({type: 'body', summary: data[0].join('').trim(), testPlan: ''}) %}
+body -> summary newline:+ testPlan {% data => ({type: 'body', summary: data[0], testPlan: data[2], breakingChanges: null}) %}
+        | summary newline:+ testPlan newline:+ breakingChanges {% data => ({type: 'body', summary: data[0], testPlan: data[2], breakingChanges: data[4]}) %}
+        | [\s\S]:+ {% data => ({type: 'body', summary: data[0].join('').trim(), testPlan: null, breakingChanges: null}) %}
 
-summary -> "**Summary**" newline:+ [\s\S]:+ {% data => data[2].join('') %}
+summary -> "**Summary**" newline:+ description {% data => data[2] %}
 
-testPlan -> "**Test plan**" newline:+ [\s\S]:+ {% data => data[2].join('') %}
+testPlan -> "**Test plan**" newline:+ description {% data => data[2] %}
+
+breakingChanges -> "**Breaking changes**" newline:+ description {% data => data[2] %}
+
+description -> chars {% data => data[0] %}
+              | chars newline:+ chars {% data => data.join('') %}
+              | chars newline:+ description {% data => data.join('') %}
 
 chars -> [^\n\r]:+ {% data => data[0].join('') %}
 
