@@ -1,12 +1,12 @@
 message -> title newline:+ body {% data => ({type: 'message', title: data[0], body: data[2] }) %}
 
-title -> typeTag "(" sectionTag "): " chars {% data => ({ type: 'title', typeTag: data[0], sectionTag: data[2], value: data[4] }) %}
-         | typeTag ": " chars {% data => ({ type: 'title', typeTag: data[0], sectionTag: null, value: data[2] }) %}
-         | chars {% data => ({ type: 'title', typeTag: null, sectionTag: null, value: data[0].trim() }) %}
+title -> typeTag "(" scopeTag "): " chars {% data => ({ type: 'title', typeTag: data[0], scopeTag: data[2], value: data[4] }) %}
+         | typeTag ": " chars {% data => ({ type: 'title', typeTag: data[0], scopeTag: null, value: data[2] }) %}
+         | chars {% data => ({ type: 'title', typeTag: null, scopeTag: null, value: data[0].trim() }) %}
 
 typeTag -> letters {% data => data[0] %}
 
-sectionTag -> letters {% data => data[0] %}
+scopeTag -> letters {% data => data[0] %}
 
 body -> summary newline:+ testPlan {% data => ({type: 'body', summary: data[0].value, testPlan: data[2], breakingChanges: null, fixes: data[0].fixes}) %}
         | summary newline:+ testPlan newline:+ breakingChanges {% data => ({type: 'body', summary: data[0].value, testPlan: data[2], breakingChanges: data[4], fixes: data[0].fixes}) %}
