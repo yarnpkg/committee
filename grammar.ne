@@ -1,39 +1,73 @@
-message -> title newline:+ body {% data => ({type: 'message', title: data[0], body: data[2] }) %}
+@{%
+const {FIX_KEYWORDS, TYPES} = require('./constants');
 
-title -> typeTag "(" scopeTag "): " chars {% data => ({ type: 'title', typeTag: data[0], scopeTag: data[2], value: data[4] }) %}
-         | typeTag ": " chars {% data => ({ type: 'title', typeTag: data[0], scopeTag: null, value: data[2] }) %}
-         | chars {% data => ({ type: 'title', typeTag: null, scopeTag: null, value: data[0].trim() }) %}
+const moo = require("moo");
+const lexer = moo.states({
+  title: {
+      changeType: {match: /^\w+(?=[(:])/},
+      changeScope: {match: /\(\w+\)(?=:)/, value: scope => scope.slice(1, -1)},
+      titleTagEnd: /:\s*/,
+      text: /.+/,
+      titleEnd: {match: /(?:\r?\n)+/, lineBreaks: true, push: 'body'},
+  },
+  body: {
+    newline: {match: /\r?\n/, lineBreaks: true},
+    sectionTitle: /^[A-Z-#~*.=].{1,39}$/,
+    fix: {
+      match: /[a-zA-Z]+(?= #\d+)/,
+      keywords: {
+        fixKeyword: FIX_KEYWORDS,
+      },
+      push: 'issueRef',
+    },
+    char: /.+?/,
+  },
+  issueRef: {
+    issueId: {
+      match: / #\d+/,
+      value: id => id.slice(2),
+      pop: true,
+    },
+  }
+});
 
-typeTag -> letters {% data => data[0] %}
+const coalesce = data => data.filter(Boolean).reduce((res, curr) => res.concat(curr), []);
 
-scopeTag -> letters {% data => data[0] %}
+%}
 
-body -> summary newline:+ testPlan {% data => ({type: 'body', summary: data[0].value, testPlan: data[2], breakingChanges: null, fixes: data[0].fixes}) %}
-        | summary newline:+ testPlan newline:+ breakingChanges {% data => ({type: 'body', summary: data[0].value, testPlan: data[2], breakingChanges: data[4], fixes: data[0].fixes}) %}
-        | description {% data => ({type: 'body', summary: data[0], testPlan: null, breakingChanges: null, fixes: []}) %}
+@lexer lexer
 
-summary -> "**Summary**" newline:+ description {% data => ({value: data[2], fixes: []}) %}
-           | "**Summary**" newline:+ fixes [\s]:+ description {% data => ({value: data[4], fixes: data[2]}) %}
+message -> title body {% data => ({type: TYPES.message, title: data[0], body: data[1] }) %}
 
-testPlan -> "**Test plan**" newline:+ description {% data => data[2] %}
+title -> titlePrefix:? %text %titleEnd {% data => ({ type: TYPES.title, value: data[1], ...(data[0] || {})}) %}
 
-breakingChanges -> "**Breaking changes**" newline:+ description {% data => data[2] %}
+titlePrefix -> %changeType %changeScope:? %titleTagEnd {% data => ({changeType: data[0], changeScope: data[1]}) %}
 
-fixes -> initialFix "." {% data => [data[0]] %}
-         | initialFix subsequentFix:+ "." {% data => [data[0]].concat(data[1]) %}
+body -> section {% data => ({type: TYPES.body, sections: [data[0]]}) %}
+        | section %newline:+ body {% data => ({type: TYPES.body, sections: [data[0], ...data[2].sections]}) %}
+        | description {% data => ({type: TYPES.body, sections: [{type: TYPES.section, title: '', description: data[0]}]}) %}
 
-initialFix -> "Fixes #" [\d]:+ {% data => data[1].join('') %}
+section -> %sectionTitle %newline:+ description {% data => ({type: TYPES.section, title: data[0], description: data[2]}) %}
 
-subsequentFix -> ", fixes #" [\d]:+ {% data => data[1].join('') %}
+fix -> %fixKeyword %issueId {% data => ({type: TYPES.fix, keyword: data[0].value, id: data[1].value, value: `${data[0].value} #${data[1].value}`}) %}
 
-description -> chars {% data => data[0] %}
-              | chars newline:+ chars {% data => data[0] + data[1].join('') + data[2] %}
-              | chars newline:+ description {% data => data[0] + data[1].join('') + data[2] %}
+text -> %char {% id %}
+        | fix {% id %}
 
-chars -> [^\s] [^\n\r]:+ {% data => data[0] + data[1].join('') %}
+line -> text:+ {% data => data[0].reduce((res, node) => {
+    const last = res[res.length - 1];
+    if (node.type === TYPES.fix) {
+        res.push(node);
+    } else if (last && last.type === TYPES.text) {
+        last.value += node.value;
+    } else {
+        res.push({
+            type: TYPES.text,
+            value: node.value,
+        });
+    }
+    return res;
+}, []) %}
 
-nonWhitespace -> [^\s]:+ {% data => data[0].join('') %}
-
-letters -> [\w]:+ {% data => data[0].join('') %}
-
-newline -> "\n" | "\r\n"
+description -> line {% id %}
+               | line %newline:+ description {% coalesce %}

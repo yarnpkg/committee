@@ -11,8 +11,6 @@ if (require.main === module) {
   process.stdin.on('data', data => parser.feed(data.toString('utf8')));
   process.stdin.on('end', () => {
     const rankedResults = rank(parser.results);
-    // console.log(rankedResults.map(quality).toString());
-    // console.log(require('util').inspect(rankedResults, {depth: 10}));
 
     console.log(serialize(rankedResults[0]));
   });

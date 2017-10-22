@@ -7,6 +7,7 @@
   "dependencies": {
     "conventional-commit-types": "^2.2.0",
     "longest": "^1.0.1",
+    "moo": "^0.4.3",
     "nearley": "^2.11.0",
     "right-pad": "^1.0.1",
     "word-wrap": "^1.2.3"
