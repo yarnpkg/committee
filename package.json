@@ -11,5 +11,9 @@
     "nearley": "^2.11.0",
     "right-pad": "^1.0.1",
     "word-wrap": "^1.2.3"
+  },
+  "scripts": {
+    "compile": "nearleyc grammar.ne -o lib/grammar.js",
+    "test": "node ./index.js < test.txt"
   }
 }
