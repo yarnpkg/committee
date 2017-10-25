@@ -15,6 +15,6 @@
   "scripts": {
     "compile": "nearleyc grammar.ne -o lib/grammar.js",
     "test":
-      "node ./index.js < tests/test1.txt && node ./index.js < tests/test2.txt"
+      "node ./index.js < tests/test1.txt && node ./index.js < tests/test2.txt && node ./index.js < tests/test3.txt"
   }
 }

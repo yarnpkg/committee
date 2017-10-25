@@ -1,0 +1,38 @@
+Allow ${HOME} in .npmrc to work in Windows (#4693)
+
+* Allow ${HOME} in .npmrc to work in Windows
+
+Windows doesn't set the HOME environment variable by default, but NPM
+has logic to set process.env.HOME based on the current OS home
+directory.  See
+https://github.com/npm/npm/blob/fb28e5868a9dbbe21a15f23fe8cf8b3703e8adf2/lib/config/defaults.js#L81
+
+Yarn doesn't do this, so configs such as `prefix =
+${HOME}/.npm-packages` that work for NPM will cause Yarn to refuse to
+run.  This commit updates Yarn's behavior to be closer to NPM's.
+
+Unlike NPM, this commit only sets HOME if it's not already set, to avoid
+potentially incompatible changes with existing Yarn users.
+
+* Revert "Allow ${HOME} in .npmrc to work in Windows"
+
+This reverts commit 436422d5b90ccd52e6bad67720b54d7f7c59a44f.
+
+* Allow ${HOME} in .npmrc to work in Windows
+
+Windows doesn't set the HOME environment variable by default, but NPM
+has logic to set process.env.HOME based on the current OS home
+directory.  See
+https://github.com/npm/npm/blob/fb28e5868a9dbbe21a15f23fe8cf8b3703e8adf2/lib/config/defaults.js#L81
+
+Yarn doesn't do this, so configs such as `prefix =
+${HOME}/.npm-packages` that work for NPM will cause Yarn to refuse to
+run.  This commit updates Yarn's behavior to be closer to NPM's, by
+using a custom/modified environment when processing NPM configurations.
+
+Add a Flow type `Env` to represent a set of environment variables.
+
+* Ensure environment is restored after test
+
+(A separate `describe` block seems like overkill.)
+

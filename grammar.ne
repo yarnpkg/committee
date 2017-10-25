@@ -14,7 +14,7 @@ title -> titlePrefix:? %text %titleEnd {% data => ({ type: TYPES.title, value: d
 titlePrefix -> %changeType %changeScope:? %titleTagEnd {% data => ({changeType: data[0], changeScope: data[1]}) %}
 
 body -> section:+ {% data => ({type: TYPES.body, sections: data[0]}) %}
-        | description {% data => ({type: TYPES.body, sections: [{type: TYPES.section, title: '', description: data[0]}]}) %}
+        | %newline:* description {% data => ({type: TYPES.body, sections: [{type: TYPES.section, title: '', description: data[1]}]}) %}
 
 section -> %newline:+ %sectionTitle %newline:+ description {% data => ({type: TYPES.section, title: data[1], description: data[3]}) %}
 
