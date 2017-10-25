@@ -1,27 +1,18 @@
-fix(resolver): Fix incorrect peer dependency res. from different trees (#4687)
+fix(request): pass a proxy to request even if falsy (#4761)
 
 **Summary**
 
-Fixes #4539, fixes #1234, fixes #234.     Yarn was resolving peer dependencies from the closest level where the peer dependency
-was requested
-but it was not checking if the peer dependency was in the same subtree. This was causing incorrect
-peer dependency resolutions and package duplication when  an unrelated subtree has a depedency
-satisfying the required peer dependency at the same tree level.
+Fixes #4546.
 
+Pass a `proxy` value to `request` to prevent it from falling back to
+checking envirnment variables.
+Yarn already gets the env var values through it's configuration and may
+have overriden them to it's own liking.
+See use case in mentioned issue.
 
-```js
-var some = 'code sample';
-some.replace('to see', 'if serializer');
-
-
-breaks(some);
-```
-
+If a `proxy` value is not set, then [this logic](https://github.com/request/request/blob/b12a6245d9acdb1e13c6486d427801e123fdafae/request.js#L277) causes it to check the env vars instead, which will fallback to `http_proxy`. This was preventing the `https_proxy false` config setting from working if environment variables were set, because the request library would fallback to using that instead.
 
 **Test plan**
 
-Added new install integration test that fails without the fix.
-
-**Breaking changes**
-
-So many breaing changes that I cannot list
+Manually test with and without https_proxy set in config and in
+environment variable.

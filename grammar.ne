@@ -8,11 +8,11 @@ const lexer = moo.states({
       changeScope: {match: /\(\w+\)(?=:)/, value: scope => scope.slice(1, -1)},
       titleTagEnd: /:\s*/,
       text: /.+/,
-      titleEnd: {match: /(?:\r?\n)+/, lineBreaks: true, push: 'body'},
+      titleEnd: {match: /\r?\n/, lineBreaks: true, push: 'body'},
   },
   body: {
     newline: {match: /\r?\n/, lineBreaks: true},
-    sectionTitle: /^[A-Z-#~*.=].{1,39}$/,
+    sectionTitle: /^[A-Z-#~*.=].{0,38}[^.\n\r]$/,
     fix: {
       match: /[a-zA-Z]+(?= #\d+)/,
       keywords: {
@@ -37,17 +37,16 @@ const coalesce = data => data.filter(Boolean).reduce((res, curr) => res.concat(c
 
 @lexer lexer
 
-message -> title body {% data => ({type: TYPES.message, title: data[0], body: data[1] }) %}
+message -> title body %newline:* {% data => ({type: TYPES.message, title: data[0], body: data[1] }) %}
 
 title -> titlePrefix:? %text %titleEnd {% data => ({ type: TYPES.title, value: data[1], ...(data[0] || {})}) %}
 
 titlePrefix -> %changeType %changeScope:? %titleTagEnd {% data => ({changeType: data[0], changeScope: data[1]}) %}
 
-body -> section {% data => ({type: TYPES.body, sections: [data[0]]}) %}
-        | section %newline:+ body {% data => ({type: TYPES.body, sections: [data[0], ...data[2].sections]}) %}
+body -> section:+ {% data => ({type: TYPES.body, sections: data[0]}) %}
         | description {% data => ({type: TYPES.body, sections: [{type: TYPES.section, title: '', description: data[0]}]}) %}
 
-section -> %sectionTitle %newline:+ description {% data => ({type: TYPES.section, title: data[0], description: data[2]}) %}
+section -> %newline:+ %sectionTitle %newline:+ description {% data => ({type: TYPES.section, title: data[1], description: data[3]}) %}
 
 fix -> %fixKeyword %issueId {% data => ({type: TYPES.fix, keyword: data[0].value, id: data[1].value, value: `${data[0].value} #${data[1].value}`}) %}
 
