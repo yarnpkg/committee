@@ -12,7 +12,7 @@ if (require.main === module) {
   process.stdin.on('end', () => {
     const rankedResults = rank(parser.results);
 
-    console.log(serialize(rankedResults[0]));
+    console.log(serialize(rankedResults[0]) + '\n');
   });
 } else {
   module.exports = engine();
